@@ -21,7 +21,7 @@ local PG = LP:WaitForChild("PlayerGui")
 -- ============================================================
 -- SECTION 2: LOAD UI (replace YOUR_NAME with your GitHub username)
 -- ============================================================
-local UI_URL = "https://raw.githubusercontent.com/YOUR_NAME/thunder-hub/main/ThunderUI.lua"
+local UI_URL = "https://raw.githubusercontent.com/somchaitanawat0/ThunderHub/refs/heads/main/ThunderUI.lua"
 
 local UI_SUCCESS, UILib = pcall(function()
     return loadstring(game:HttpGet(UI_URL))()
