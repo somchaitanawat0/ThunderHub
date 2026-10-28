@@ -1,17 +1,6 @@
 --[[
-    Thunder UI - Custom UI Library (Standalone)
-    - Draggable main frame + top bar
-    - Minimize to small bar (draggable)
-    - Quick tab buttons in mini bar
-    - Real theme switching (10 colors)
-    - Widgets: Button, Toggle, Slider, Input, Dropdown, Label
-    - No external library required
-    
-    Usage:
-        local UILib = loadstring(game:HttpGet("...ThunderUI.lua"))()
-        local Hub = UILib.New({ Title = "Thunder Hub", Theme = "Blue" })
-        local tab = Hub:AddTab("Farm")
-        Hub:AddButton(tab, "Click Me", function() print("hi") end)
+    Thunder UI - Custom Fluent-Style Library
+    Features: Left Sidebar, Draggable Window, Minimize to Draggable Bar
 ]]
 
 local UserInputService = game:GetService("UserInputService")
@@ -19,9 +8,6 @@ local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
 local PG = LP:WaitForChild("PlayerGui")
 
--- ============================================================
--- THEMES (10 colors)
--- ============================================================
 local Themes = {
     ["Blue"]     = Color3.fromRGB(52, 152, 219),
     ["Cerulean"] = Color3.fromRGB(0, 123, 167),
@@ -35,9 +21,6 @@ local Themes = {
     ["Gray"]     = Color3.fromRGB(149, 165, 166),
 }
 
--- ============================================================
--- UI CLASS
--- ============================================================
 local UI = {}
 UI.__index = UI
 
@@ -47,7 +30,6 @@ function UI.new(options)
     self.Title = options.Title or "Thunder Hub"
     self.Tabs = {}
     self.TabButtons = {}
-    self.MiniTabs = {}
     self:Build()
     return self
 end
@@ -56,11 +38,7 @@ function UI:GetColor()
     return Themes[self.Theme] or Themes["Blue"]
 end
 
--- ============================================================
--- BUILD MAIN FRAME
--- ============================================================
 function UI:Build()
-    -- ScreenGui
     self.ScreenGui = Instance.new("ScreenGui")
     self.ScreenGui.Name = "ThunderHubUI"
     self.ScreenGui.ResetOnSpawn = false
@@ -68,11 +46,11 @@ function UI:Build()
     self.ScreenGui.DisplayOrder = 9999
     self.ScreenGui.Parent = PG
 
-    -- MainFrame
+    -- Main Window Frame
     self.MainFrame = Instance.new("Frame")
-    self.MainFrame.Size = UDim2.fromOffset(560, 380)
-    self.MainFrame.Position = UDim2.fromOffset(100, 100)
-    self.MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    self.MainFrame.Size = UDim2.fromOffset(600, 400)
+    self.MainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
+    self.MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     self.MainFrame.BorderSizePixel = 0
     self.MainFrame.Parent = self.ScreenGui
 
@@ -85,10 +63,10 @@ function UI:Build()
     self.MainStroke.Thickness = 2
     self.MainStroke.Parent = self.MainFrame
 
-    -- TopBar
+    -- Top Bar (Draggable Handle)
     self.TopBar = Instance.new("Frame")
-    self.TopBar.Size = UDim2.new(1, 0, 0, 32)
-    self.TopBar.BackgroundColor3 = self:GetColor()
+    self.TopBar.Size = UDim2.new(1, 0, 0, 36)
+    self.TopBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     self.TopBar.BorderSizePixel = 0
     self.TopBar.Parent = self.MainFrame
 
@@ -99,16 +77,17 @@ function UI:Build()
     -- Title
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(0, 200, 1, 0)
-    title.Position = UDim2.fromOffset(10, 0)
+    title.Position = UDim2.fromOffset(15, 0)
     title.BackgroundTransparency = 1
     title.Text = self.Title
     title.TextColor3 = Color3.new(1, 1, 1)
     title.Font = Enum.Font.GothamBold
     title.TextSize = 14
     title.TextXAlignment = Enum.TextXAlignment.Left
+    title.TextTruncate = Enum.TextTruncate.AtEnd
     title.Parent = self.TopBar
 
-    -- Minimize button
+    -- Minimize Button
     local minBtn = Instance.new("TextButton")
     minBtn.Size = UDim2.fromOffset(24, 24)
     minBtn.Position = UDim2.new(1, -60, 0.5, -12)
@@ -124,7 +103,7 @@ function UI:Build()
     mc.CornerRadius = UDim.new(0, 6)
     mc.Parent = minBtn
 
-    -- Close button
+    -- Close Button
     local closeBtn = Instance.new("TextButton")
     closeBtn.Size = UDim2.fromOffset(24, 24)
     closeBtn.Position = UDim2.new(1, -30, 0.5, -12)
@@ -140,18 +119,32 @@ function UI:Build()
     cc.CornerRadius = UDim.new(0, 6)
     cc.Parent = closeBtn
 
-    -- TabBar
-    self.TabBar = Instance.new("Frame")
-    self.TabBar.Size = UDim2.new(1, 0, 0, 32)
-    self.TabBar.Position = UDim2.fromOffset(0, 32)
-    self.TabBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    self.TabBar.BorderSizePixel = 0
-    self.TabBar.Parent = self.MainFrame
+    -- Left Sidebar
+    self.Sidebar = Instance.new("ScrollingFrame")
+    self.Sidebar.Size = UDim2.new(0, 150, 1, -36)
+    self.Sidebar.Position = UDim2.fromOffset(0, 36)
+    self.Sidebar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    self.Sidebar.BorderSizePixel = 0
+    self.Sidebar.ScrollBarThickness = 2
+    self.Sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
+    self.Sidebar.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    self.Sidebar.Parent = self.MainFrame
 
-    -- Content
+    local sideLayout = Instance.new("UIListLayout")
+    sideLayout.Padding = UDim.new(0, 4)
+    sideLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    sideLayout.Parent = self.Sidebar
+
+    local sidePad = Instance.new("UIPadding")
+    sidePad.PaddingTop = UDim.new(0, 8)
+    sidePad.PaddingLeft = UDim.new(0, 8)
+    sidePad.PaddingRight = UDim.new(0, 8)
+    sidePad.Parent = self.Sidebar
+
+    -- Content Area (Right Side)
     self.ContentArea = Instance.new("Frame")
-    self.ContentArea.Size = UDim2.new(1, 0, 1, -64)
-    self.ContentArea.Position = UDim2.fromOffset(0, 64)
+    self.ContentArea.Size = UDim2.new(1, -150, 1, -36)
+    self.ContentArea.Position = UDim2.fromOffset(150, 36)
     self.ContentArea.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     self.ContentArea.BorderSizePixel = 0
     self.ContentArea.Parent = self.MainFrame
@@ -160,25 +153,22 @@ function UI:Build()
     cc2.CornerRadius = UDim.new(0, 8)
     cc2.Parent = self.ContentArea
 
-    -- MiniBar
+    -- Build MiniBar
     self:BuildMiniBar()
 
-    -- Drag
+    -- Enable Dragging
     self:MakeDraggable(self.MainFrame, self.TopBar)
     self:MakeDraggable(self.MiniBar, self.MiniBar)
 
-    -- Bind
+    -- Button Connections
     minBtn.MouseButton1Click:Connect(function() self:Minimize() end)
     closeBtn.MouseButton1Click:Connect(function() self.ScreenGui:Destroy() end)
 end
 
--- ============================================================
--- MINI BAR (แถบแท็บเล็กด้านบน)
--- ============================================================
 function UI:BuildMiniBar()
     self.MiniBar = Instance.new("Frame")
-    self.MiniBar.Size = UDim2.fromOffset(300, 36)
-    self.MiniBar.Position = UDim2.fromOffset(100, 100)
+    self.MiniBar.Size = UDim2.fromOffset(250, 36)
+    self.MiniBar.Position = self.MainFrame.Position
     self.MiniBar.BackgroundColor3 = self:GetColor()
     self.MiniBar.BorderSizePixel = 0
     self.MiniBar.Visible = false
@@ -188,18 +178,10 @@ function UI:BuildMiniBar()
     c.CornerRadius = UDim.new(0, 8)
     c.Parent = self.MiniBar
 
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.new(1, 1, 1)
-    stroke.Thickness = 1
-    stroke.Transparency = 0.5
-    stroke.Parent = self.MiniBar
-
-    -- ปุ่มขยายกลับ
     self.ExpandBtn = Instance.new("TextButton")
-    self.ExpandBtn.Size = UDim2.fromOffset(70, 28)
-    self.ExpandBtn.Position = UDim2.fromOffset(4, 4)
+    self.ExpandBtn.Size = UDim2.fromOffset(80, 26)
+    self.ExpandBtn.Position = UDim2.fromOffset(5, 5)
     self.ExpandBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    self.ExpandBtn.BackgroundTransparency = 0.15
     self.ExpandBtn.Text = "Open"
     self.ExpandBtn.TextColor3 = self:GetColor()
     self.ExpandBtn.Font = Enum.Font.GothamBold
@@ -212,24 +194,8 @@ function UI:BuildMiniBar()
     ec.Parent = self.ExpandBtn
 
     self.ExpandBtn.MouseButton1Click:Connect(function() self:Expand() end)
-
-    -- Container สำหรับ quick tab buttons
-    self.MiniTabContainer = Instance.new("Frame")
-    self.MiniTabContainer.Size = UDim2.new(1, -80, 1, 0)
-    self.MiniTabContainer.Position = UDim2.fromOffset(78, 0)
-    self.MiniTabContainer.BackgroundTransparency = 1
-    self.MiniTabContainer.Parent = self.MiniBar
-
-    local miniLayout = Instance.new("UIListLayout")
-    miniLayout.FillDirection = Enum.FillDirection.Horizontal
-    miniLayout.Padding = UDim.new(0, 4)
-    miniLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    miniLayout.Parent = self.MiniTabContainer
 end
 
--- ============================================================
--- MINIMIZE / EXPAND
--- ============================================================
 function UI:Minimize()
     self.MiniBar.Position = self.MainFrame.Position
     self.MainFrame.Visible = false
@@ -242,16 +208,12 @@ function UI:Expand()
     self.MiniBar.Visible = false
 end
 
--- ============================================================
--- DRAG SYSTEM
--- ============================================================
 function UI:MakeDraggable(frame, handle)
     local dragging = false
     local dragStart, startPos
 
     handle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1
-           or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
             startPos = frame.Position
@@ -259,29 +221,20 @@ function UI:MakeDraggable(frame, handle)
     end)
 
     handle.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
-           or input.UserInputType == Enum.UserInputType.Touch) then
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = input.Position - dragStart
-            frame.Position = UDim2.new(
-                startPos.X.Scale, startPos.X.Offset + delta.X,
-                startPos.Y.Scale, startPos.Y.Offset + delta.Y
-            )
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
 
     UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1
-           or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
         end
     end)
 end
 
--- ============================================================
--- ADD TAB
--- ============================================================
 function UI:AddTab(name)
-    -- Content frame
     local content = Instance.new("ScrollingFrame")
     content.Size = UDim2.new(1, -10, 1, -10)
     content.Position = UDim2.fromOffset(5, 5)
@@ -298,46 +251,24 @@ function UI:AddTab(name)
     layout.SortOrder = Enum.SortOrder.LayoutOrder
     layout.Parent = content
 
-    -- Tab button
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.fromOffset(80, 28)
-    btn.Position = UDim2.fromOffset(#self.TabButtons * 84 + 4, 2)
-    btn.BackgroundColor3 = (#self.Tabs == 0) and self:GetColor() or Color3.fromRGB(55, 55, 55)
-    btn.Text = name
-    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Size = UDim2.new(1, 0, 0, 32)
+    btn.BackgroundColor3 = (#self.Tabs == 0) and Color3.fromRGB(45, 45, 45) or Color3.fromRGB(35, 35, 35)
+    btn.Text = "  " .. name
+    btn.TextColor3 = (#self.Tabs == 0) and self:GetColor() or Color3.fromRGB(200, 200, 200)
     btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 12
+    btn.TextSize = 13
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.TextTruncate = Enum.TextTruncate.AtEnd
     btn.BorderSizePixel = 0
-    btn.Parent = self.TabBar
+    btn.Parent = self.Sidebar
 
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 6)
     c.Parent = btn
 
-    -- Mini tab button
-    local miniBtn = Instance.new("TextButton")
-    miniBtn.Size = UDim2.fromOffset(50, 24)
-    miniBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    miniBtn.BackgroundTransparency = 0.85
-    miniBtn.Text = name
-    miniBtn.TextColor3 = Color3.new(1, 1, 1)
-    miniBtn.Font = Enum.Font.Gotham
-    miniBtn.TextSize = 10
-    miniBtn.BorderSizePixel = 0
-    miniBtn.Parent = self.MiniTabContainer
-
-    local mc = Instance.new("UICorner")
-    mc.CornerRadius = UDim.new(0, 6)
-    mc.Parent = miniBtn
-
-    miniBtn.MouseButton1Click:Connect(function()
-        self:Expand()
-        self:SwitchTab(name)
-    end)
-
     self.Tabs[name] = content
     table.insert(self.TabButtons, {Name = name, Button = btn})
-    table.insert(self.MiniTabs, {Name = name, Button = miniBtn})
 
     btn.MouseButton1Click:Connect(function()
         self:SwitchTab(name)
@@ -352,16 +283,15 @@ function UI:SwitchTab(name)
     end
     for _, t in ipairs(self.TabButtons) do
         if t.Name == name then
-            t.Button.BackgroundColor3 = self:GetColor()
+            t.Button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            t.Button.TextColor3 = self:GetColor()
         else
-            t.Button.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+            t.Button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            t.Button.TextColor3 = Color3.fromRGB(200, 200, 200)
         end
     end
 end
 
--- ============================================================
--- WIDGETS
--- ============================================================
 function UI:AddButton(parent, text, callback)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, 0, 0, 34)
@@ -370,6 +300,7 @@ function UI:AddButton(parent, text, callback)
     btn.TextColor3 = Color3.new(1, 1, 1)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 13
+    btn.TextTruncate = Enum.TextTruncate.AtEnd
     btn.BorderSizePixel = 0
     btn.Parent = parent
 
@@ -404,6 +335,7 @@ function UI:AddToggle(parent, text, default, callback)
     label.Font = Enum.Font.Gotham
     label.TextSize = 13
     label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextTruncate = Enum.TextTruncate.AtEnd
     label.Parent = container
 
     local toggleBtn = Instance.new("TextButton")
@@ -452,6 +384,7 @@ function UI:AddSlider(parent, text, default, min, max, callback)
     label.Font = Enum.Font.Gotham
     label.TextSize = 13
     label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextTruncate = Enum.TextTruncate.AtEnd
     label.Parent = container
 
     local bar = Instance.new("Frame")
@@ -476,19 +409,12 @@ function UI:AddSlider(parent, text, default, min, max, callback)
     fc.Parent = fill
 
     local dragging = false
-
     bar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-        end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
     end)
-
     UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
     end)
-
     UserInputService.InputChanged:Connect(function(input)
         if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
             local mouseX = input.Position.X
@@ -515,7 +441,7 @@ function UI:AddInput(parent, text, default, callback)
     c.Parent = container
 
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0, 140, 1, 0)
+    label.Size = UDim2.new(0, 120, 1, 0)
     label.Position = UDim2.fromOffset(10, 0)
     label.BackgroundTransparency = 1
     label.Text = text
@@ -523,16 +449,18 @@ function UI:AddInput(parent, text, default, callback)
     label.Font = Enum.Font.Gotham
     label.TextSize = 13
     label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextTruncate = Enum.TextTruncate.AtEnd
     label.Parent = container
 
     local box = Instance.new("TextBox")
-    box.Size = UDim2.new(1, -170, 0, 24)
-    box.Position = UDim2.new(1, -160, 0.5, -12)
+    box.Size = UDim2.new(1, -145, 0, 24)
+    box.Position = UDim2.new(1, -135, 0.5, -12)
     box.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     box.Text = default
     box.TextColor3 = Color3.new(1, 1, 1)
     box.Font = Enum.Font.Gotham
     box.TextSize = 13
+    box.TextTruncate = Enum.TextTruncate.AtEnd
     box.BorderSizePixel = 0
     box.Parent = container
 
@@ -560,7 +488,7 @@ function UI:AddDropdown(parent, text, options, default, callback)
     c.Parent = container
 
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0, 140, 1, 0)
+    label.Size = UDim2.new(0, 120, 1, 0)
     label.Position = UDim2.fromOffset(10, 0)
     label.BackgroundTransparency = 1
     label.Text = text
@@ -568,16 +496,18 @@ function UI:AddDropdown(parent, text, options, default, callback)
     label.Font = Enum.Font.Gotham
     label.TextSize = 13
     label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextTruncate = Enum.TextTruncate.AtEnd
     label.Parent = container
 
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -170, 0, 24)
-    btn.Position = UDim2.new(1, -160, 0.5, -12)
+    btn.Size = UDim2.new(1, -145, 0, 24)
+    btn.Position = UDim2.new(1, -135, 0.5, -12)
     btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     btn.Text = default
     btn.TextColor3 = Color3.new(1, 1, 1)
     btn.Font = Enum.Font.Gotham
     btn.TextSize = 13
+    btn.TextTruncate = Enum.TextTruncate.AtEnd
     btn.BorderSizePixel = 0
     btn.Parent = container
 
@@ -586,8 +516,8 @@ function UI:AddDropdown(parent, text, options, default, callback)
     bc.Parent = btn
 
     local listFrame = Instance.new("Frame")
-    listFrame.Size = UDim2.new(1, -170, 0, #options * 26)
-    listFrame.Position = UDim2.new(0, 160, 1, 2)
+    listFrame.Size = UDim2.new(1, -145, 0, #options * 26)
+    listFrame.Position = UDim2.new(0, 135, 1, 2)
     listFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     listFrame.BorderSizePixel = 0
     listFrame.Visible = false
@@ -609,6 +539,7 @@ function UI:AddDropdown(parent, text, options, default, callback)
         ob.TextColor3 = Color3.new(1, 1, 1)
         ob.Font = Enum.Font.Gotham
         ob.TextSize = 12
+        ob.TextTruncate = Enum.TextTruncate.AtEnd
         ob.BorderSizePixel = 0
         ob.ZIndex = 21
         ob.Parent = listFrame
@@ -635,24 +566,19 @@ function UI:AddLabel(parent, text)
     label.TextColor3 = Color3.new(1, 1, 1)
     label.Font = Enum.Font.Gotham
     label.TextSize = 13
+    label.TextTruncate = Enum.TextTruncate.AtEnd
     label.BorderSizePixel = 0
     label.Parent = parent
 
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 6)
     c.Parent = label
-
     return label
 end
 
--- ============================================================
--- THEME SYSTEM
--- ============================================================
 function UI:GetThemeNames()
     local names = {}
-    for name, _ in pairs(Themes) do
-        table.insert(names, name)
-    end
+    for name, _ in pairs(Themes) do table.insert(names, name) end
     table.sort(names)
     return names
 end
@@ -663,13 +589,12 @@ function UI:SetTheme(name)
     local color = self:GetColor()
 
     self.MainStroke.Color = color
-    self.TopBar.BackgroundColor3 = color
     self.MiniBar.BackgroundColor3 = color
     self.ExpandBtn.TextColor3 = color
 
     for _, t in ipairs(self.TabButtons) do
-        if t.Button.BackgroundColor3 ~= Color3.fromRGB(55, 55, 55) then
-            t.Button.BackgroundColor3 = color
+        if t.Button.BackgroundColor3 == Color3.fromRGB(45, 45, 45) then
+            t.Button.TextColor3 = color
         end
     end
 end
@@ -678,9 +603,6 @@ function UI:GetThemeColor()
     return self:GetColor()
 end
 
--- ============================================================
--- EXPORT
--- ============================================================
 return {
     Themes = Themes,
     New = function(opts) return UI.new(opts) end,
